@@ -50,7 +50,7 @@ Reusable prompt templates and context docs:
 #### workitem/
 Prompts for defining, scoping, and constraining a unit of work — use in sequence:
 - [`engineer-intent.prompt.md`](prompt/workitem/engineer-intent.prompt.md) — encode purpose, values, and decision boundaries → produces `INTENT.md`
-- [`engineer-spec.prompt.md`](prompt/workitem/engineer-spec.prompt.md) — write a precise, agent-executable spec → produces `SPEC.md`
+- [`engineer-specification.prompt.md`](prompt/workitem/engineer-specification.prompt.md) — write a precise, agent-executable spec → produces `SPEC.md`
 - [`architect-service.prompt.md`](prompt/workitem/architect-service.prompt.md) — canonical service layer architecture rules (inject as agent context)
 
 #### jira/

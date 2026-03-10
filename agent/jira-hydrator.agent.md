@@ -71,7 +71,7 @@ Parse the JSON and extract:
 - `fields.description` — full description
 - `fields.customfield_10000` or the field containing acceptance criteria (look for "AC" or "Acceptance Criteria" in the description or custom fields)
 - `fields.customfield_XXXXX` — tech details (look for "Tech Details" in custom text fields)
-- `fields.comment.comments` — comments list
+- `fields.comment.comments` — comments list (see filtering rules below)
 - `fields.customfield_10007` — sprint info
 - `fields.customfield_10009` — parent key / epic link
 - `fields.customfield_11900` — linked pull requests
@@ -82,6 +82,28 @@ Parse the JSON and extract:
 - For classic projects: the epic key is in `fields.customfield_10009` (Epic Link) or `fields.customfield_10014`
 - For next-gen projects: the parent is in `fields.parent.key` when the parent's issuetype is "Epic"
 - If the issue IS an epic, use it directly as the root epic
+
+### 2.1 Filter Comments
+
+From `fields.comment.comments`, remove any comment where the author matches a known bot. Apply **both** filters:
+
+1. **Exact match** — skip if `author.displayName` is any of:
+   - `"Automation for Jira"`
+
+2. **Pattern match** — skip if `author.displayName` or `author.emailAddress` contains (case-insensitive):
+   - `bot`
+   - `automation`
+
+For each surviving comment, retain only:
+```json
+{
+  "author": "displayName",
+  "created": "ISO timestamp",
+  "body": "comment text"
+}
+```
+
+Store the filtered comment list as `filteredComments` for use in Phase 4 and Phase 5.
 
 ---
 
@@ -116,11 +138,11 @@ acli jira workitem list --jql "parent = {ISSUE_ID}" --fields "*navigable,attachm
 
 Group all collected issues into categories based on `fields.issuetype.name`:
 - `epic` — the root epic
-- `stories` — Stories
-- `tasks` — Tasks
-- `bugs` — Bugs
-- `subtasks` — Sub-tasks
-- `spikes` — Spikes (if present)
+- `story` — Stories
+- `task` — Tasks
+- `bug` — Bugs
+- `subtask` — Sub-tasks
+- `spike` — Spikes (if present)
 - `other` — any other types
 
 ### 3.4 Collect PR Links
@@ -131,31 +153,60 @@ For each issue, extract PR information from `fields.customfield_11900`. This fie
 
 ## Phase 4: Write Context to Disk
 
-Create the following directory structure in the **current working directory** of the calling project (not in ai-lab):
+Create the directory structure in the **current working directory** of the calling project (not in ai-lab). **Only create subdirectories for issue types that actually have items** — do not create empty directories.
 
+The root directory is always created:
+```
+workitem/
+└── {ISSUE_ID}/
+    └── context.md
+```
+
+Then, for each non-empty category from Phase 3.3, create a subdirectory and write its files:
+
+| Category has items? | Directory created |
+|---------------------|-------------------|
+| Epic exists         | `epic/`           |
+| Stories exist       | `story/`          |
+| Tasks exist         | `task/`           |
+| Bugs exist          | `bug/`            |
+| Subtasks exist      | `subtask/`        |
+| Spikes exist        | `spike/`          |
+| Other types exist   | `other/`          |
+
+Example — a work item with an epic and stories but no bugs, tasks, or subtasks:
 ```
 workitem/
 └── {ISSUE_ID}/
     ├── context.md
     ├── epic/
     │   └── {EPIC_ID}.json
-    ├── stories/
-    │   └── {STORY_ID}.json
-    ├── tasks/
-    │   └── {TASK_ID}.json
-    ├── bugs/
-    │   └── {BUG_ID}.json
-    ├── subtasks/
-    │   └── {SUBTASK_ID}.json
-    └── other/
-        └── {ISSUE_ID}.json
+    └── story/
+        └── {STORY_ID}.json
 ```
 
-**Write each JSON file** with the raw (but filtered) response from `acli`. Omit null fields and noisy metadata to keep files readable.
+**Write each JSON file** with the raw response from `acli`, then clean it immediately after writing.
+
+**Write `comments.json`** using the `filteredComments` list from Phase 2.1:
+
+```bash
+# Write filtered comments (author, created, body only — bots already removed)
+echo '{filtered comments JSON array}' > workitem/{ISSUE_ID}/comments.json
+```
+
+If `filteredComments` is empty, still write the file with an empty array `[]`.
+
+After all JSON files are written, strip null fields and noisy avatar metadata for readability:
+
+```bash
+find workitem/{ISSUE_ID} -name "*.json" | while read f; do
+  jq 'del(.. | .avatarUrls? // empty) | walk(if type == "object" then with_entries(select(.value != null)) else . end)' "$f" > "${f}.tmp" && mv "${f}.tmp" "$f"
+done
+```
 
 **Write `context.md`** — see Phase 5.
 
-Use `mkdir -p` to create the directory tree, then write files using shell redirection or a simple write command.
+Use `mkdir -p` to create only the directories that are needed, then write files using shell redirection or a simple write command.
 
 ---
 
@@ -205,7 +256,11 @@ Apply the section weight hierarchy when synthesizing the summary. Higher weight 
 | ... | | | | |
 
 ## Key Comments
-{relevant comments from devs/QA, chronological, skip bot messages}
+{From the root issue only. Source: comments.json (bot comments already filtered).
+Render each comment chronologically as:
+**{author}** _{created}_: {body}
+
+If no human comments exist, write: "_No human comments found._"}
 
 ## PR Links
 {list of linked PRs across all related issues}
@@ -222,10 +277,11 @@ After writing all files, report to the user:
 
 📁 workitem/{ISSUE_ID}/
    ├── context.md
-   ├── epic/{EPIC_ID}.json
-   ├── stories/ ({N} files)
-   ├── tasks/ ({N} files)
-   ├── bugs/ ({N} files)
+   ├── comments.json ({N} human comments, bots filtered)
+   [only list subdirectories that were created, e.g.:]
+   ├── epic/{EPIC_ID}.json        (if epic existed)
+   ├── story/ ({N} files)         (if stories existed)
+   ├── task/ ({N} files)          (if tasks existed)
    └── ...
 
 ⚠️ Flags:
