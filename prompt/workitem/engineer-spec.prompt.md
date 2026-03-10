@@ -15,7 +15,7 @@ Paste this into your AI of choice after completing your intent document:
 ---
 
 ```
-You are a specification engineer. Your job is to interview me about a project and produce a SPEC.md — a document complete enough that an autonomous agent can execute against it without asking me clarifying questions mid-task.
+You are a specification engineer. Your job is to interview me about a project and produce a SPECIFICATION.md — a document complete enough that an autonomous agent can execute against it without asking me clarifying questions mid-task.
 
 A good spec is not a long document. It is a precise one. Every line earns its place.
 If removing a line wouldn't cause the agent to make mistakes, it shouldn't be in the spec.
@@ -84,11 +84,11 @@ Probe for:
 
 ---
 
-After covering all five dimensions, produce the SPEC.md in this exact format:
+After covering all five dimensions, produce the SPECIFICATION.md in this exact format:
 
 ---
 
-## Spec: [Task or Feature Name]
+## Specification: [Task or Feature Name]
 
 **Depends on:** [Link to INTENT.md or state "standalone"]
 **Status:** Draft
@@ -150,25 +150,25 @@ Begin the interview now. Ask me to describe the task as if the agent has never s
 1. **Complete your `INTENT.md` first** — spec without intent means you might build the wrong thing perfectly.
 2. **Paste the prompt block** into Claude, GPT, or your preferred AI.
 3. **Answer the interview** — if you can't answer a question, that's the spec gap the agent would have guessed at.
-4. **Save the result as `SPEC.md`** in your project root (or `specs/[feature-name].md` for multi-feature projects).
-5. **Load both `INTENT.md` and `SPEC.md`** at the start of every agent session.
+4. **Save the result as `SPECIFICATION.md`** in your project root (or `specifications/[feature-name].md` for multi-feature projects).
+5. **Load both `INTENT.md` and `SPECIFICATION.md`** at the start of every agent session.
 
 ---
 
-## Using SPEC.md With Your INTENT.md
+## Using SPECIFICATION.md With Your INTENT.md
 
 Once you have both documents, this is the agent session pattern:
 
 ```
 [paste INTENT.md contents]
 ---
-[paste SPEC.md contents]
+[paste SPECIFICATION.md contents]
 ---
 Now execute [Phase 1 / specific task].
 ```
 
 **INTENT.md loads once per project.** It doesn't change unless your goals or values change.
-**SPEC.md changes per feature or task.** Each new piece of work gets its own spec, always paired with the same intent.
+**SPECIFICATION.md changes per feature or task.** Each new piece of work gets its own specification, always paired with the same intent.
 
 Start with one phase at a time. Don't hand the agent the full decomposition and say "go" — give it one phase, verify the output meets that phase's acceptance criteria, then proceed to the next.
 
@@ -179,7 +179,7 @@ Start with one phase at a time. Don't hand the agent the full decomposition and 
 | Layer | The question it answers | Output artifact |
 |---|---|---|
 | **Intent Engineering** | What should I *want*? | `INTENT.md` |
-| **Specification Engineering** | What should I *build*, and how will I know it's done? | `SPEC.md` |
+| **Specification Engineering** | What should I *build*, and how will I know it's done? | `SPECIFICATION.md` |
 | Context Engineering | What should I *know* right now? | System prompt, RAG, memory |
 | Prompt Craft | What should I *do* next? | The individual request |
 

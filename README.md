@@ -17,10 +17,10 @@ This repo is designed to:
 
 ```
 ai-lab/
-├── prompts/          # Reusable prompt templates and context docs
-├── skills/           # Focused, composable capabilities
-├── agents/           # Full agent definitions and system prompts
-├── tools/            # Tool configs, scripts, and utilities
+├── prompt/           # Reusable prompt templates and context docs
+├── skill/            # Focused, composable capabilities
+├── agent/            # Full agent definitions and system prompts
+├── tool/             # Tool configs, scripts, and utilities
 ├── tmp/              # Scratch space — nothing here is precious
 └── README.md
 ```
@@ -38,26 +38,27 @@ ai-lab/
 This is an experiment-first repo. The rules:
 - **WIP is the default state** — incomplete ideas live here too
 - **Flat over nested** — don't over-structure until patterns emerge
-- **Promote when proven** — things graduate to `prompts/` or `agents/` once they've earned it
+- **Promote when proven** — things graduate to `prompt/` or `agent/` once they've earned it
 - **Delete freely** — if it didn't work, remove it
 
 ## Categories
 
 ### Prompts
 Reusable prompt templates and context docs:
-- [`readme-md-generator-prompt.md`](prompts/readme-md-generator-prompt.md) — generate a README.md for Go projects
+- [`generate-readme.prompt.md`](prompt/generate-readme.prompt.md) — generate a README.md for Go projects
 
 #### workitem/
 Prompts for defining, scoping, and constraining a unit of work — use in sequence:
-- [`project-intent-engineering-prompt.md`](prompts/workitem/project-intent-engineering-prompt.md) — encode purpose, values, and decision boundaries → produces `INTENT.md`
-- [`project-spec-engineering-prompt.md`](prompts/workitem/project-spec-engineering-prompt.md) — write a precise, agent-executable spec → produces `SPEC.md`
-- [`service-architect-spec.md`](prompts/workitem/service-architect-spec.md) — canonical service layer architecture rules (inject as agent context)
+- [`engineer-intent.prompt.md`](prompt/workitem/engineer-intent.prompt.md) — encode purpose, values, and decision boundaries → produces `INTENT.md`
+- [`engineer-spec.prompt.md`](prompt/workitem/engineer-spec.prompt.md) — write a precise, agent-executable spec → produces `SPEC.md`
+- [`architect-service.prompt.md`](prompt/workitem/architect-service.prompt.md) — canonical service layer architecture rules (inject as agent context)
 
 #### jira/
-- [`acli-commands.md`](prompts/jira/acli-commands.md) — complete ACLI (Atlassian CLI) command reference
-- [`field-filter-review.md`](prompts/jira/field-filter-review.md) — JIRA field filter analysis for reducing payload size
-- [`fields-to-filter.md`](prompts/jira/fields-to-filter.md) — list of safe-to-filter JIRA fields
-- [`filtered-acli-command.md`](prompts/jira/filtered-acli-command.md) — final recommended ACLI command with optimal field set
+- [`acli-commands.prompt.md`](prompt/jira/acli-commands.prompt.md) — complete ACLI (Atlassian CLI) command reference
+- [`review-field-filters.prompt.md`](prompt/jira/review-field-filters.prompt.md) — JIRA field filter analysis for reducing payload size
+- [`filter-fields.prompt.md`](prompt/jira/filter-fields.prompt.md) — list of safe-to-filter JIRA fields
+- [`build-acli-command.prompt.md`](prompt/jira/build-acli-command.prompt.md) — final recommended ACLI command with optimal field set
+- [`enhance-skill.prompt.md`](prompt/jira/enhance-skill.prompt.md) — suggested enhancements for the Jira skill
 
 ### Skills
 Focused, composable capabilities with defined input/output contracts:
@@ -65,8 +66,8 @@ Focused, composable capabilities with defined input/output contracts:
 
 ### Agents
 Full system prompts for AI agents:
-- [`jira-context-hydrator-agent.md`](agents/jira-context-hydrator-agent.md) — fetches all context for a Jira issue (epic, stories, tasks, bugs, PRs) and persists it to `workitem/{ID}/` for other agents to consume
-- [`jira-workitem-retriever-agent.md`](agents/jira-workitem-retriever-agent.md) — retrieves Jira work items by ticket ID or current git branch
+- [`jira-hydrator.agent.md`](agent/jira-hydrator.agent.md) — fetches all context for a Jira issue (epic, stories, tasks, bugs, PRs) and persists it to `workitem/{ID}/` for other agents to consume
+- [`jira-retriever.agent.md`](agent/jira-retriever.agent.md) — retrieves Jira work items by ticket ID or current git branch
 
 ### Tools
 Scripts, configs, and utilities that complement AI workflows:
@@ -89,12 +90,58 @@ bash ~/path/to/ai-lab/install.sh
 ### Adding a new prompt or agent
 
 1. Drop the file in `tmp/` first while experimenting
-2. Once it's working, move it to `prompts/` or `agents/` with a descriptive name
+2. Once it's working, move it to `prompt/` or `agent/` with a descriptive name following the naming convention
 3. Add a one-liner to this README under the relevant category
+
+## Naming Convention
+
+All files follow the pattern `{name}.{type}.md` with kebab-case names.
+
+### Types and their dirs
+
+| Type | Dir | Extension |
+|---|---|---|
+| Prompt | `prompt/` | `.prompt.md` |
+| Skill | `skill/` | `.skill.md` |
+| Agent | `agent/` | `.agent.md` |
+| Tool | `tool/` | `.tool.md` |
+
+### Name structure
+
+- **Prompts & skills** → `{verb}-{noun}` — they're tasks: `generate-readme`, `summarize-ticket`
+- **Agents** → `{domain}-{role}` — they're personas: `jira-hydrator`, `code-reviewer`
+- **Tools** → `{domain}-{verb}` — they're utilities: `jira-fetch`, `git-sync`
+
+### Subdir rule
+
+Create a domain subdir (e.g. `prompt/jira/`) only when **3 or more files** share the same domain. Otherwise keep flat.
+
+### Verb shortlist
+
+Reuse these to stay consistent: `generate`, `review`, `analyze`, `extract`, `build`, `hydrate`, `summarize`, `write`, `fetch`, `engineer`
+
+### Examples
+
+```
+agent/jira-hydrator.agent.md
+skill/summarize-ticket.skill.md
+prompt/generate-readme.prompt.md
+prompt/jira/build-acli-command.prompt.md
+tool/jira-fetch.tool.md
+```
+
+### Glob patterns
+
+```bash
+ls agent/*.agent.md          # all agents
+ls skill/*.skill.md          # all skills
+ls prompt/**/*.prompt.md     # all prompts
+ls tool/*.tool.md            # all tools
+```
 
 ## Contributing
 
-1. Follow naming conventions: lowercase with hyphens (`my-prompt.md`)
+1. Follow the naming convention: `{name}.{type}.md` in the correct dir (see **Naming Convention** above)
 2. Drop experiments in `tmp/` first — promote to the right folder once proven
 3. Add a one-liner to this README when promoting something
 4. Delete things that didn't work — a clean repo is more useful than a full one
