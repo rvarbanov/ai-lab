@@ -17,13 +17,21 @@ This repo is designed to:
 
 ```
 ai-lab/
-├── prompts/          # Reusable prompts organized by category
+├── prompts/          # Reusable prompt templates and context docs
+├── skills/           # Focused, composable capabilities
 ├── agents/           # Full agent definitions and system prompts
 ├── tools/            # Tool configs, scripts, and utilities
-├── memory-bank/      # Persistent context and reference docs
 ├── tmp/              # Scratch space — nothing here is precious
 └── README.md
 ```
+
+## Concepts
+
+- **Prompt** — A reusable text template or instruction fragment. Stateless. You feed it input, it shapes the model's output. No persistent behavior.
+- **Skill** — A focused, composable capability. A prompt + defined input/output contract. A named, reusable unit of work (e.g., "summarize a ticket", "write a commit message").
+- **Agent** — A full autonomous entity with a system prompt, defined tools, decision-making loop, and often a persona. It can take multi-step actions, use tools, and run until a goal is complete. An agent *uses* prompts and skills internally.
+
+> **Analogy:** Prompt = a recipe card. Skill = a trained technique. Agent = a chef who uses many techniques to cook a full meal.
 
 ## Lab Philosophy
 
@@ -36,23 +44,33 @@ This is an experiment-first repo. The rules:
 ## Categories
 
 ### Prompts
-Reusable prompt fragments and templates:
-- Purpose and use case
-- Input parameters (if any)
-- Expected output format
-- Known limitations
+Reusable prompt templates and context docs:
+- [`readme-md-generator-prompt.md`](prompts/readme-md-generator-prompt.md) — generate a README.md for Go projects
+
+#### workitem/
+Prompts for defining, scoping, and constraining a unit of work — use in sequence:
+- [`project-intent-engineering-prompt.md`](prompts/workitem/project-intent-engineering-prompt.md) — encode purpose, values, and decision boundaries → produces `INTENT.md`
+- [`project-spec-engineering-prompt.md`](prompts/workitem/project-spec-engineering-prompt.md) — write a precise, agent-executable spec → produces `SPEC.md`
+- [`service-architect-spec.md`](prompts/workitem/service-architect-spec.md) — canonical service layer architecture rules (inject as agent context)
+
+#### jira/
+- [`acli-commands.md`](prompts/jira/acli-commands.md) — complete ACLI (Atlassian CLI) command reference
+- [`field-filter-review.md`](prompts/jira/field-filter-review.md) — JIRA field filter analysis for reducing payload size
+- [`fields-to-filter.md`](prompts/jira/fields-to-filter.md) — list of safe-to-filter JIRA fields
+- [`filtered-acli-command.md`](prompts/jira/filtered-acli-command.md) — final recommended ACLI command with optimal field set
+
+### Skills
+Focused, composable capabilities with defined input/output contracts:
+- *(none yet)*
 
 ### Agents
 Full system prompts for AI agents:
-- Agent description and capabilities
-- Required tools or integrations
-- Example interactions
+- [`jira-context-hydrator-agent.md`](agents/jira-context-hydrator-agent.md) — fetches all context for a Jira issue (epic, stories, tasks, bugs, PRs) and persists it to `workitem/{ID}/` for other agents to consume
+- [`jira-workitem-retriever-agent.md`](agents/jira-workitem-retriever-agent.md) — retrieves Jira work items by ticket ID or current git branch
 
 ### Tools
 Scripts, configs, and utilities that complement AI workflows:
-- What it does
-- How to use it
-- Dependencies
+- *(none yet)*
 
 ## Usage
 
