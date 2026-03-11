@@ -21,7 +21,8 @@ ai-lab/
 ├── skill/            # Focused, composable capabilities
 ├── agent/            # Full agent definitions and system prompts
 ├── tool/             # Tool configs, scripts, and utilities
-├── tmp/              # Scratch space — nothing here is precious
+├── templates/        # Skeleton files for creating new prompts, skills, agents, and tools
+├── wip/              # Scratch space — nothing here is precious
 └── README.md
 ```
 
@@ -89,9 +90,10 @@ bash ~/path/to/ai-lab/install.sh
 
 ### Adding a new prompt or agent
 
-1. Drop the file in `tmp/` first while experimenting
-2. Once it's working, move it to `prompt/` or `agent/` with a descriptive name following the naming convention
-3. Add a one-liner to this README under the relevant category
+1. Optionally start from a file in `templates/` (e.g. `my-prompt.prompt.md`) — copy it, rename, and edit.
+2. Drop the file in `wip/` first while experimenting
+3. Once it's working, move it to `prompt/` or `agent/` with a descriptive name following the naming convention
+4. Add a one-liner to this README under the relevant category
 
 ## Naming Convention
 
@@ -142,7 +144,7 @@ ls tool/*.tool.md            # all tools
 ## Contributing
 
 1. Follow the naming convention: `{name}.{type}.md` in the correct dir (see **Naming Convention** above)
-2. Drop experiments in `tmp/` first — promote to the right folder once proven
+2. Drop experiments in `wip/` first — promote to the right folder once proven
 3. Add a one-liner to this README when promoting something
 4. Delete things that didn't work — a clean repo is more useful than a full one
 
@@ -150,5 +152,5 @@ ls tool/*.tool.md            # all tools
 
 - Keep prompts focused and composable
 - Document quirks and limitations when you find them
-- `tmp/` is scratch space — nothing there is expected to be stable
+- `wip/` is scratch space — nothing there is expected to be stable
 
