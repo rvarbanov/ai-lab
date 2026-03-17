@@ -1,0 +1,63 @@
+# Low-Fidelity Wireframe: UX Flow for New User Registration
+
+This wireframe details the step-by-step flow for a new user registering in a SaaS web app.
+
+---
+
+## 1. Home Page
+
++---------------------------------------------------+
+|  [Logo]        [Nav: Home | Features | Login]      |
++---------------------------------------------------+
+|                                                   |
+|  [Hero Section: Headline, Value Prop, CTA Button]  |
+|                                                   |
+|  [Register Button]                                |
++---------------------------------------------------+
+
+---
+
+## 2. Registration Page
+
++-------------------------------+
+|        Register New Account   |
++-------------------------------+
+| [Email Input]                 |
+| [Password Input]              |
+| [Register Button]             |
++-------------------------------+
+
+---
+
+## 3. Email Verification Page
+
++-------------------------------+
+|   Enter Verification Code     |
++-------------------------------+
+| [Code Input]                  |
+| [Resend Code] [Submit]        |
++-------------------------------+
+
+---
+
+## 4. User Detail Page (Profile Completion)
+
++-------------------------------+
+|      Complete Your Profile    |
++-------------------------------+
+| [Name Input]                  |
+| [Phone Number Input]          |
+| [Save Changes Button]         |
++-------------------------------+
+
+---
+
+## 5. Success State
+
++-------------------------------+
+| [Success: Profile updated!]   |
++-------------------------------+
+
+---
+
+This flow covers registration from the home page, email verification, and profile completion, following standard UX patterns.

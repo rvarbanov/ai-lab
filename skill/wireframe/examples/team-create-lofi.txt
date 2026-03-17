@@ -1,0 +1,44 @@
+# Low-Fidelity Wireframe: UX Flow for Creating a New Team
+
+---
+
+## 1. Dashboard or Teams List
+
++-----------------------------------------------+
+| [Teams List]   [Create New Team Button]        |
++-----------------------------------------------+
+| [Team 1]   [Team 2]   ...                     |
++-----------------------------------------------+
+
+---
+
+## 2. Click "Create New Team" → Open Modal or Navigate to Form
+
++-------------------------------+
+|        Create New Team        |
++-------------------------------+
+| [Team Name Input]             |
+| [Description Input]           |
+| [Add Members (optional)]      |
+| [Create Team Button] [Cancel] |
++-------------------------------+
+
+---
+
+## 3. Success State
+
++-------------------------------+
+| [Success: Team created!]      |
++-------------------------------+
+
+---
+
+## 4. Return to Teams List
+
++-----------------------------------------------+
+| [Teams List updated with new team]            |
++-----------------------------------------------+
+
+---
+
+This flow uses simple forms and feedback messages, following standard UX patterns for team creation.

@@ -1,0 +1,84 @@
+# Low-Fidelity Wireframe (Text-Based)
+
+This wireframe outlines the main screens and layout for a basic SaaS web app, using simple ASCII diagrams and descriptions.
+
+---
+
+## 1. Home/Landing Page
+
++---------------------------------------------------+
+|  [Logo]        [Nav: Home | Features | Login]      |
++---------------------------------------------------+
+|                                                   |
+|  [Hero Section: Headline, Value Prop, CTA Button]  |
+|                                                   |
+|  [Feature 1]   [Feature 2]   [Feature 3]           |
+|                                                   |
++---------------------------------------------------+
+|                [Footer Links]                      |
++---------------------------------------------------+
+
+---
+
+## 2. Dashboard
+
++-------------------+-------------------------------+
+| [Side Nav]        | [Top Nav: Profile, Logout]     |
+|  - Dashboard      +-------------------------------+
+|  - Lists          | [Stats Widget] [Chart Widget]  |
+|  - Settings       | [Recent Activity Feed]         |
+|  - Admin          |                               |
++-------------------+-------------------------------+
+
+---
+
+## 3. Login Page
+
++-------------------------------+
+|         [Logo]                |
+|                               |
+|   [Email Input]               |
+|   [Password Input]            |
+|   [Login Button]              |
+|   [Forgot Password?]          |
++-------------------------------+
+
+---
+
+## 4. List/Table View
+
++-----------------------------------------------+
+| [Search Bar]   [Filter]   [Add New Button]     |
++-----------------------------------------------+
+| [Table: Columns | Edit | Delete ]             |
+| [Row 1]                                      |
+| [Row 2]                                      |
+| ...                                          |
++-----------------------------------------------+
+| [Pagination]                                 |
++-----------------------------------------------+
+
+---
+
+## 5. User Settings
+
++-------------------------------+
+| [Profile Info: Name, Email]   |
+| [Change Password]             |
+| [Notification Preferences]    |
+| [Delete Account]              |
++-------------------------------+
+
+---
+
+## 6. Admin Panel
+
++-------------------------------+
+| [User List]                   |
+| [Edit | Deactivate]           |
+| [Role Assignment]             |
++-------------------------------+
+
+---
+
+All elements are represented as boxes or text. Use this as a blueprint for digital wireframing tools or further design work.

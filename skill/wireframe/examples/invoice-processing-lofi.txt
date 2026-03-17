@@ -1,0 +1,82 @@
+---
+
+### 1. Invoice List
+
++---------------------------------------------------+
+| [Top Nav: Dashboard | Invoices | Reports | Logout] |
++---------------------------------------------------+
+| [Filter: Status (New, Assigned, Pending, Action-Required, Complete)]         |
+| [Search Bar]                                      |
++---------------------------------------------------+
+| Invoice   | Status          | Due In   | Action    |
+|-----------|-----------------|----------|-----------|
+| #1        | New             | 5 days   | Review    |
+| #2        | Assigned        | 3 days   | Start Review |
+| #3        | Pending         | 1 day    | Manager Review |
+| #4        | Action-Required | 2 days   | Resolve   |
+| #5        | Complete        | -        | View      |
+| ...                                               |
++---------------------------------------------------+
+
+---
+
+### 2. Review New Invoice
+
++-------------------------------+
+| [Invoice Details]             |
+| [Assign to Manager: Dropdown] |
+| [Mark as Assigned] [Cancel]   |
++-------------------------------+
+
+---
+
+### 3. Assigned Invoice (Manager View)
+
++-------------------------------+
+| [Invoice Details]             |
+| [Start Review]                |
++-------------------------------+
+
+---
+
+### 4. Manager Reviews Pending Invoice
+
++-------------------------------+
+| [Invoice Details]             |
+| [Comment Input]               |
+| [Submit Comment] [Cancel]     |
++-------------------------------+
+
+---
+
+### 5. Action-Required Invoice
+
++-------------------------------+
+| [Invoice Details]             |
+| [Reason: Missing Info]        |
+| [Enter Info/Resolve]          |
+| [Submit Resolution]           |
++-------------------------------+
+
+---
+
+### 6. Supervisor Reviews Pending Invoice
+
++-------------------------------+
+| [Invoice Details]             |
+| [Manager Comment: ...]        |
+| [Mark as Complete] [Reject]   |
++-------------------------------+
+
+---
+
+### 7. Dashboard
+
++---------------------------------------------------+
+| [Top Nav]                                         |
++---------------------------------------------------+
+| [Invoices Due in 7 Days: 5] (link to filtered list) |
+| [Total Owed: $X]                                  |
+| [New: $Y] [Assigned: $A] [Pending: $Z]            |
+| [Action-Required: $R] [Complete: $C]              |
++---------------------------------------------------+

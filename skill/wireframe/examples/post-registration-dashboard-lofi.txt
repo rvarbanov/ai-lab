@@ -1,0 +1,24 @@
+# Low-Fidelity Wireframe: Post-Registration Team Dashboard
+
+---
+
++-------------------------------------------------------------+
+| [Logo]        [Top Nav: Home | Dashboard | Teams | Profile | Logout]|
++-------------------------------------------------------------+
+|                                                             |
+| +-------------------+   +-------------------------------+   |
+| | [Side Nav]        |   |                               |   |
+| | - Player          |   |         [Main Content]         |   |
+| | - Team            |   |  (Welcome message, team info,  |   |
+| | - Tools           |   |                               |   |
+| +-------------------+   +-------------------------------+   |
+|                                                             |
++-------------------------------------------------------------+
+|                        [Footer Links]                       |
++-------------------------------------------------------------+
+
+---
+
+- Side navigation is on the left with User Profile, My Team, and Teams.
+- Main content area is centered, showing relevant info after joining a team.
+- Top navigation and footer are present for full app context.
