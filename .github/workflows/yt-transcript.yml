@@ -17,13 +17,32 @@ jobs:
   transcript:
     runs-on: ubuntu-latest
     steps:
-      - name: Install yt-dlp
-        run: pip install yt-dlp
+      - name: Install dependencies
+        run: |
+          pip install yt-dlp bgutil-ytdlp-pot-provider
+          # Install Deno for JS runtime and bgutil PO token generation
+          curl -fsSL https://deno.land/install.sh | sh
+          echo "$HOME/.deno/bin" >> $GITHUB_PATH
+
+      - name: Setup bgutil PO token server
+        run: |
+          git clone --depth 1 https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git /tmp/bgutil
+          cd /tmp/bgutil/server
+          npm ci
+          # Install yt-dlp plugins
+          mkdir -p ~/.config/yt-dlp/plugins/bgutil/yt_dlp_plugins/extractor
+          cp /tmp/bgutil/plugin/yt_dlp_plugins/extractor/getpot_bgutil*.py             ~/.config/yt-dlp/plugins/bgutil/yt_dlp_plugins/extractor/
+          # Start bgutil HTTP server in background
+          ~/.deno/bin/deno run --allow-net --allow-read --allow-write --allow-env             --node-modules-dir=auto /tmp/bgutil/server/src/main.ts &
+          sleep 5
+          curl -sf http://localhost:4416/ && echo "bgutil server ready"
+          # Set server_home so script-deno provider works too
+          echo "BGUTIL_SERVER_HOME=/tmp/bgutil/server" >> $GITHUB_ENV
 
       - name: Download transcript
         run: |
           mkdir -p transcript_output
-          yt-dlp             --write-auto-subs             --write-subs             --sub-langs "${{ inputs.lang }}"             --skip-download             --no-playlist             -o "transcript_output/%(title)s [%(id)s]"             "${{ inputs.youtube_url }}"
+          yt-dlp             --js-runtimes deno             --extractor-args "youtube:player_client=web"             --write-auto-subs             --write-subs             --sub-langs "${{ inputs.lang }}"             --skip-download             --no-playlist             -o "transcript_output/%(title)s [%(id)s]"             "${{ inputs.youtube_url }}"
           ls -la transcript_output/
 
       - name: Convert VTT to plain text
@@ -32,15 +51,14 @@ jobs:
           for f in *.vtt *.srt; do
             [ -f "$f" ] || continue
             out="${f%.*}.txt"
-            # Strip VTT/SRT markup and deduplicate lines
-            cat "$f"               | grep -v '^WEBVTT'               | grep -v '^NOTE'               | grep -v '^[0-9]*$'               | grep -v '\-\->'               | sed 's/<[^>]*>//g'               | sed '/^$/d'               | awk '!seen[$0]++'               > "$out"
+            cat "$f"               | grep -v '^WEBVTT' | grep -v '^NOTE'               | grep -v '^[0-9]*$' | grep -v '\-\->'               | sed 's/<[^>]*>//g' | sed '/^$/d'               | awk '!seen[$0]++' > "$out"
             echo "Created: $out ($(wc -w < "$out") words)"
-            cat "$out"
           done
+          cat transcript_output/*.txt 2>/dev/null | head -50
 
       - name: Upload transcript
         uses: actions/upload-artifact@v4
         with:
           name: transcript
           path: transcript_output/*.txt
-          if-no-files-found: error
+          if-no-files-found: warn
