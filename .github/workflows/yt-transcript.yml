@@ -18,43 +18,75 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: |
-          pip install yt-dlp bgutil-ytdlp-pot-provider
-          # Install Deno for JS runtime and bgutil PO token generation
-          curl -fsSL https://deno.land/install.sh | sh
-          echo "$HOME/.deno/bin" >> $GITHUB_PATH
+        run: pip install youtube-transcript-api yt-dlp
 
-      - name: Setup bgutil PO token server
+      - name: Extract transcript
+        id: extract
         run: |
-          git clone --depth 1 https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git /tmp/bgutil
-          cd /tmp/bgutil/server
-          npm ci
-          # Install yt-dlp plugins
-          mkdir -p ~/.config/yt-dlp/plugins/bgutil/yt_dlp_plugins/extractor
-          cp /tmp/bgutil/plugin/yt_dlp_plugins/extractor/getpot_bgutil*.py             ~/.config/yt-dlp/plugins/bgutil/yt_dlp_plugins/extractor/
-          # Start bgutil HTTP server in background
-          ~/.deno/bin/deno run --allow-net --allow-read --allow-write --allow-env             --node-modules-dir=auto /tmp/bgutil/server/src/main.ts &
-          sleep 5
-          curl -sf http://localhost:4416/ && echo "bgutil server ready"
-          # Set server_home so script-deno provider works too
-          echo "BGUTIL_SERVER_HOME=/tmp/bgutil/server" >> $GITHUB_ENV
-
-      - name: Download transcript
-        run: |
+          VIDEO_ID=$(echo "${{ inputs.youtube_url }}" | grep -oP '(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})' | grep -oP '[a-zA-Z0-9_-]{11}' | head -1)
+          echo "Video ID: $VIDEO_ID"
           mkdir -p transcript_output
-          yt-dlp             --js-runtimes deno             --extractor-args "youtube:player_client=web"             --write-auto-subs             --write-subs             --sub-langs "${{ inputs.lang }}"             --skip-download             --no-playlist             -o "transcript_output/%(title)s [%(id)s]"             "${{ inputs.youtube_url }}"
+          
+          # Try youtube-transcript-api first (no auth needed for unauthenticated IPs)
+          python3 << 'PYEOF'
+          import sys, re, os
+          
+          video_id = os.environ.get('VIDEO_ID', '')
+          lang = os.environ.get('LANG_CODE', 'en')
+          
+          video_id_match = re.search(r'[a-zA-Z0-9_-]{11}', '${{ inputs.youtube_url }}'.split('v=')[-1].split('&')[0])
+          video_id = '${{ inputs.youtube_url }}'.split('v=')[-1].split('&')[0][:11] if 'v=' in '${{ inputs.youtube_url }}' else '${{ inputs.youtube_url }}'.split('youtu.be/')[-1][:11]
+          lang = '${{ inputs.lang }}'
+          
+          print(f"Fetching transcript for video ID: {video_id}, lang: {lang}")
+          
+          try:
+              from youtube_transcript_api import YouTubeTranscriptApi
+              api = YouTubeTranscriptApi()
+              transcript = api.fetch(video_id, languages=[lang, 'en'])
+              text = ' '.join(s.text for s in transcript)
+              outfile = f"transcript_output/transcript_{video_id}.txt"
+              with open(outfile, 'w') as f:
+                  f.write(text)
+              word_count = len(text.split())
+              print(f"SUCCESS via youtube-transcript-api: {word_count} words")
+              print(f"Preview: {text[:300]}...")
+          except Exception as e:
+              print(f"youtube-transcript-api failed: {e}")
+              print("Falling back to yt-dlp...")
+              import subprocess, glob
+              result = subprocess.run([
+                  'yt-dlp', '--write-auto-subs', '--write-subs',
+                  '--sub-langs', lang, '--skip-download', '--no-playlist',
+                  '-o', f'transcript_output/%(title)s [%(id)s]',
+                  '${{ inputs.youtube_url }}'
+              ], capture_output=True, text=True)
+              print(result.stdout[-2000:])
+              print(result.stderr[-2000:])
+              
+              # Convert VTT to txt
+              for f in glob.glob('transcript_output/*.vtt') + glob.glob('transcript_output/*.srt'):
+                  lines = []
+                  seen = set()
+                  for line in open(f).read().split('\n'):
+                      line = line.strip()
+                      if not line or line.startswith('WEBVTT') or '-->' in line or line.isdigit():
+                          continue
+                      import re as re2
+                      clean = re2.sub(r'<[^>]+>', '', line).strip()
+                      if clean and clean not in seen:
+                          seen.add(clean)
+                          lines.append(clean)
+                  out = f.rsplit('.', 1)[0] + '.txt'
+                  with open(out, 'w') as out_f:
+                      out_f.write(' '.join(lines))
+                  print(f"Converted {f} -> {out} ({len(lines)} lines)")
+          PYEOF
+          
+          echo "Output files:"
           ls -la transcript_output/
-
-      - name: Convert VTT to plain text
-        run: |
-          cd transcript_output
-          for f in *.vtt *.srt; do
-            [ -f "$f" ] || continue
-            out="${f%.*}.txt"
-            cat "$f"               | grep -v '^WEBVTT' | grep -v '^NOTE'               | grep -v '^[0-9]*$' | grep -v '\-\->'               | sed 's/<[^>]*>//g' | sed '/^$/d'               | awk '!seen[$0]++' > "$out"
-            echo "Created: $out ($(wc -w < "$out") words)"
-          done
-          cat transcript_output/*.txt 2>/dev/null | head -50
+          echo "---TRANSCRIPT PREVIEW---"
+          cat transcript_output/*.txt 2>/dev/null | head -100
 
       - name: Upload transcript
         uses: actions/upload-artifact@v4
