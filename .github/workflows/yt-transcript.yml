@@ -1,0 +1,46 @@
+name: YouTube Transcript
+
+on:
+  workflow_dispatch:
+    inputs:
+      youtube_url:
+        description: 'YouTube video URL'
+        required: true
+        type: string
+      lang:
+        description: 'Language code (default: en)'
+        required: false
+        default: 'en'
+        type: string
+
+jobs:
+  transcript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install yt-dlp
+        run: pip install yt-dlp
+
+      - name: Download transcript
+        run: |
+          mkdir -p transcript_output
+          yt-dlp             --write-auto-subs             --write-subs             --sub-langs "${{ inputs.lang }}"             --skip-download             --no-playlist             -o "transcript_output/%(title)s [%(id)s]"             "${{ inputs.youtube_url }}"
+          ls -la transcript_output/
+
+      - name: Convert VTT to plain text
+        run: |
+          cd transcript_output
+          for f in *.vtt *.srt; do
+            [ -f "$f" ] || continue
+            out="${f%.*}.txt"
+            # Strip VTT/SRT markup and deduplicate lines
+            cat "$f"               | grep -v '^WEBVTT'               | grep -v '^NOTE'               | grep -v '^[0-9]*$'               | grep -v '\-\->'               | sed 's/<[^>]*>//g'               | sed '/^$/d'               | awk '!seen[$0]++'               > "$out"
+            echo "Created: $out ($(wc -w < "$out") words)"
+            cat "$out"
+          done
+
+      - name: Upload transcript
+        uses: actions/upload-artifact@v4
+        with:
+          name: transcript
+          path: transcript_output/*.txt
+          if-no-files-found: error
