@@ -23,6 +23,14 @@ jobs:
       - name: Install dependencies
         run: pip install youtube-transcript-api yt-dlp
 
+      - name: Write cookies file
+        if: ${{ secrets.YOUTUBE_COOKIES != '' }}
+        run: |
+          echo "${{ secrets.YOUTUBE_COOKIES }}" > /tmp/yt_cookies.txt
+          echo "Cookies file written ($(wc -l < /tmp/yt_cookies.txt) lines)"
+        env:
+          YOUTUBE_COOKIES: ${{ secrets.YOUTUBE_COOKIES }}
+
       - name: Extract transcript
         run: |
           python3 - << 'PYEOF'
@@ -34,83 +42,82 @@ jobs:
 
           url = os.environ['YT_URL']
           lang = os.environ.get('LANG_CODE', 'en')
+          cookies_file = '/tmp/yt_cookies.txt' if os.path.exists('/tmp/yt_cookies.txt') else None
           
-          # Extract video ID
           m = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})', url)
           if not m:
               print(f"ERROR: Could not extract video ID from: {url}")
               sys.exit(1)
           video_id = m.group(1)
-          print(f"Video ID: {video_id}, lang: {lang}")
+          print(f"Video ID: {video_id}, lang: {lang}, cookies: {bool(cookies_file)}")
           
           os.makedirs('transcript_output', exist_ok=True)
           success = False
           
-          # --- Method 1: youtube-transcript-api ---
+          # Method 1: youtube-transcript-api with cookies
           try:
               from youtube_transcript_api import YouTubeTranscriptApi
-              api = YouTubeTranscriptApi()
+              if cookies_file:
+                  api = YouTubeTranscriptApi(cookies=cookies_file)
+              else:
+                  api = YouTubeTranscriptApi()
               print("Attempting youtube-transcript-api...")
               transcript = api.fetch(video_id, languages=[lang, 'en'])
               text = ' '.join(s.text for s in transcript)
               outfile = f'transcript_output/transcript_{video_id}.txt'
               with open(outfile, 'w') as f:
                   f.write(text)
-              print(f"SUCCESS youtube-transcript-api: {len(text.split())} words")
+              print(f"SUCCESS: {len(text.split())} words")
               print(f"Preview: {text[:500]}")
               success = True
           except Exception as e:
               print(f"youtube-transcript-api FAILED: {type(e).__name__}: {str(e)[:300]}")
           
-          if success:
-              sys.exit(0)
-          
-          # --- Method 2: yt-dlp ---
-          print("\nAttempting yt-dlp...")
-          result = subprocess.run([
-              'yt-dlp',
-              '--write-auto-subs', '--write-subs',
-              '--sub-langs', lang,
-              '--skip-download', '--no-playlist',
-              '--verbose',
-              '-o', 'transcript_output/%(title)s [%(id)s]',
-              url
-          ], capture_output=True, text=True)
-          print("STDOUT:", result.stdout[-3000:])
-          print("STDERR:", result.stderr[-3000:])
-          
-          # Convert any VTT/SRT files found
-          for f in glob.glob('transcript_output/*.vtt') + glob.glob('transcript_output/*.srt'):
-              lines = []
-              seen = set()
-              for line in open(f).read().split('\n'):
-                  line = line.strip()
-                  if not line or line.startswith('WEBVTT') or '-->' in line or line.isdigit():
-                      continue
-                  clean = re.sub(r'<[^>]+>', '', line).strip()
-                  if clean and clean not in seen:
-                      seen.add(clean)
-                      lines.append(clean)
-              out = f.rsplit('.', 1)[0] + '.txt'
-              open(out, 'w').write(' '.join(lines))
-              print(f"Created {out} ({len(lines)} lines)")
-              success = True
+          if not success:
+              # Method 2: yt-dlp with cookies
+              print("\nAttempting yt-dlp...")
+              cmd = [
+                  'yt-dlp', '--write-auto-subs', '--write-subs',
+                  '--sub-langs', lang, '--skip-download', '--no-playlist',
+                  '--js-runtimes', 'node',
+                  '-o', 'transcript_output/%(title)s [%(id)s]', url
+              ]
+              if cookies_file:
+                  cmd = cmd[:1] + ['--cookies', cookies_file] + cmd[1:]
+              result = subprocess.run(cmd, capture_output=True, text=True)
+              print("STDOUT:", result.stdout[-2000:])
+              print("STDERR:", result.stderr[-2000:])
+              
+              for f in glob.glob('transcript_output/*.vtt') + glob.glob('transcript_output/*.srt'):
+                  lines, seen = [], set()
+                  for line in open(f).read().split('\n'):
+                      line = line.strip()
+                      if not line or line.startswith('WEBVTT') or '-->' in line or line.isdigit():
+                          continue
+                      clean = re.sub(r'<[^>]+>', '', line).strip()
+                      if clean and clean not in seen:
+                          seen.add(clean); lines.append(clean)
+                  out = f.rsplit('.', 1)[0] + '.txt'
+                  open(out, 'w').write(' '.join(lines))
+                  print(f"Created {out} ({len(lines)} lines)")
+                  success = True
           
           if not success:
-              print("All methods failed. No transcript extracted.")
+              if not cookies_file:
+                  print("\nNOTE: No YOUTUBE_COOKIES secret set. Add cookies to enable authentication.")
+                  print("Run: gh secret set YOUTUBE_COOKIES --repo rvarbanov/ai-lab < ~/youtube_cookies.txt")
               sys.exit(1)
           PYEOF
 
-      - name: Show results
+      - name: Show transcript
         if: always()
         run: |
-          echo "=== transcript_output contents ==="
+          echo "=== Output files ==="
           ls -la transcript_output/ 2>/dev/null || echo "(empty)"
-          echo "=== TRANSCRIPT ==="
-          cat transcript_output/*.txt 2>/dev/null || echo "(no txt files)"
+          echo "=== Transcript preview ==="
+          cat transcript_output/*.txt 2>/dev/null | head -50 || echo "(none)"
 
-      - name: Upload transcript
-        if: always()
+      - name: Upload transcript artifact
         uses: actions/upload-artifact@v4
         with:
           name: transcript
